@@ -1,0 +1,75 @@
+Recommend method to train model (even with a system that has a gpu)
+
+Step 1: Search and open Google Colab
+Create a new notebook by clicking "File" > "New Notebook".
+
+Step 2: Copy and paste the cells from the football_training_yolo-v8.ipynb notebook onto a Google Colab Notebook 
+
+This will:
+Install Required Libraries
+You'll need to install two libraries: ultralytics and roboflow. You can install them directly in Google Colab by running the following command in a new cell:
+ 
+    !pip install ultralytics
+    !pip install roboflow  # Library used to download the dataset
+
+
+Download the Dataset
+You’ll use Roboflow to fetch the dataset for football player detection. Here's how to do it:
+Add your API Key to the following code where it says "your_api_key_here".
+To retrieve an API KEY you will need to create a free Roboflow account then...
+    1. Go to the Roboflow dashboard. 
+    2. In the left navigation bar, click on "Settings" and then "API Keys"
+    3. You will be taken to a page with your API Keys. They are scoped to a workspace so you must use the API Key associated with a workspace to access that workspace's private projects
+    4. On the left sidebar, you will see a list of workspaces. Select the workspace for which you want to issue an API Key.
+    5. Copy your Private API Key
+
+This code will fetch the dataset version and download it.
+
+    from roboflow import Roboflow
+    rf = Roboflow(api_key="your_api_key_here")  # Replace with your actual API key from 
+    project = rf.workspace("roboflow-jvuqo").project("football-players-detection-3zvbc")
+    version = project.version(1)
+    dataset = version.download("yolov8")
+
+# Print Dataset Location
+Verify Dataset Download Location
+The downloaded dataset's location will be stored in dataset.location. You can check by adding print:
+
+(dataset.location)
+
+# Move Dataset Folders for YOLOv8 Training
+This code moves the train, test, and valid folders to an appropriate directory for the YOLOv8 training format.
+In your training process, you're moving directories to organize the dataset properly. Ensure the dataset is correctly structured by running this:
+
+import shutil
+
+shutil.move('football-players-detection-1/train',
+            'football-players-detection-1/football-players-detection-1/train')
+
+shutil.move('football-players-detection-1/test',
+            'football-players-detection-1/football-players-detection-1/test')
+
+shutil.move('football-players-detection-1/valid',
+            'football-players-detection-1/football-players-detection-1/valid')
+
+# Train the YOLOv8 Model
+You will now use the yolov8x.pt pre-trained model and train it on your dataset.
+This command specifies:
+Task: Object detection (task=detect).
+Mode: Training mode (mode=train).
+Model: Pre-trained YOLOv8x model (yolov8x.pt).
+Data: YAML file path for the dataset (data={dataset.location}/data.yaml).
+Epochs: Number of training epochs (epochs=100).
+Image size: Resized image dimensions (imgsz=640).
+
+Use the following command to initiate the training process:
+    !yolo task=detect mode=train model=yolov8x.pt data={dataset.location}/data.yaml epochs=100 imgsz=640
+
+Step 3: After the model is finished, click the folder image at the bottom of the icon list on the left side of your screen
+
+Step 4: There should be a "runs" folder if it isn't there you can press refresh under "Files". Click runs > detect > train > weights > best.pt & last.pt
+
+Step 5: Click the three bullets on the right of best.pt & last.pt and download both 
+
+Step 6: Save both trained models in this "models" folder
+

@@ -1,0 +1,91 @@
+import cv2
+import sys 
+# Adding the parent directory to the system path to import utils
+sys.path.append('../')
+from utils import measure_distance, get_foot_position
+
+class SpeedAndDistance_Estimator():
+    def __init__(self):
+        # Setting frame window to calculate speed every 5 frames
+        self.frame_window = 5
+        # Frame rate of the video in frames per second
+        self.frame_rate = 24  
+    
+    def add_speed_and_distance_to_tracks(self, tracks):
+        # Dictionary to hold total distance covered by each object
+        total_distance = {}
+
+        for object, object_tracks in tracks.items():
+            # Skip processing for ball and referees
+            if object == "ball" or object == "referees":
+                continue 
+            number_of_frames = len(object_tracks)
+            # Looping through the tracks in batches defined by frame_window
+            for frame_num in range(0, number_of_frames, self.frame_window):
+                last_frame = min(frame_num + self.frame_window, number_of_frames - 1)
+
+                # Checking if the track exists in both the current and last frames
+                for track_id, _ in object_tracks[frame_num].items():
+                    if track_id not in object_tracks[last_frame]:
+                        continue
+
+                    # Getting transformed positions for start and end frames
+                    start_position = object_tracks[frame_num][track_id]['position_transformed']
+                    end_position = object_tracks[last_frame][track_id]['position_transformed']
+
+                    if start_position is None or end_position is None:
+                        continue
+                    
+                    # Calculating distance covered using measure_distance function
+                    distance_covered = measure_distance(start_position, end_position)
+                    # Calculating time elapsed based on frame difference
+                    time_elapsed = (last_frame - frame_num) / self.frame_rate
+                    # Calculating speed in meters per second
+                    speed_meters_per_second = distance_covered / time_elapsed
+                    # Converting speed to kilometers per hour
+                    speed_km_per_hour = speed_meters_per_second * 3.6
+
+                    # Initializing total distance for the object if not present
+                    if object not in total_distance:
+                        total_distance[object] = {}
+                    
+                    if track_id not in total_distance[object]:
+                        total_distance[object][track_id] = 0
+                    
+                    # Updating total distance covered by the object
+                    total_distance[object][track_id] += distance_covered
+
+                    # Updating speed and distance in the tracks for the frames in batch
+                    for frame_num_batch in range(frame_num, last_frame):
+                        if track_id not in tracks[object][frame_num_batch]:
+                            continue
+                        tracks[object][frame_num_batch][track_id]['speed'] = speed_km_per_hour
+                        tracks[object][frame_num_batch][track_id]['distance'] = total_distance[object][track_id]
+
+    def draw_speed_and_distance(self, frames, tracks):
+        output_frames = []
+        for frame_num, frame in enumerate(frames):
+            for object, object_tracks in tracks.items():
+                # Skip processing for ball and referees
+                if object == "ball" or object == "referees":
+                    continue 
+                for _, track_info in object_tracks[frame_num].items():
+                    if "speed" in track_info:
+                        speed = track_info.get('speed', None)
+                        distance = track_info.get('distance', None)
+                        if speed is None or distance is None:
+                            continue
+                        
+                        bbox = track_info['bbox']
+                        position = get_foot_position(bbox)
+                        position = list(position)
+                        position[1] += 40  # Adjusting position for text display
+
+                        position = tuple(map(int, position))
+                        # Displaying speed on the frame
+                        cv2.putText(frame, f"{speed:.2f} km/h", position, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+                        # Displaying distance on the frame
+                        cv2.putText(frame, f"{distance:.2f} m", (position[0], position[1] + 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+            output_frames.append(frame)
+        
+        return output_frames  # Returning the modified frames
