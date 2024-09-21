@@ -9,11 +9,11 @@
 
 ## Synopsys 
 
-The goal of this project is to develop a real-time soccer match analysis system that utilizes machine learning and computer vision techniques. The system leverages YOLOv8, a state-of-the-art one-stage object detection model, to accurately detect and track players, referees, and soccer balls throughout the game. The algorithm is trained on a custom dataset consisting of approximately 663 individual images, totaling around 150 MB of data (instructions for accessing the dataset can be found in ```/models/model.txt/```). 
+The goal of this project is to develop a real-time soccer match analysis system utilizing advanced machine learning and computer vision techniques. The system leverages YOLOv8, a state-of-the-art one-stage object detection model, to accurately detect and track players, referees, and soccer balls throughout the game. The model is trained on a custom dataset of approximately 663 images, totaling around 150 MB of data (instructions for accessing the dataset can be found in ```/models/model.txt/```). 
 
-In addition to object detection, the system employs KMeans clustering to assign players to teams based on their jersey colors and utilizes optical flow to track player movement, compensating for camera motion. By applying perspective transformation, the model converts pixel movements into real-world measurements, enabling the calculation of speed and distance for each player.
+In addition to object detection, the system employs KMeans clustering to segment pixels within a player's bounding box, allowing team assignment based on jersey colors. This segmentation also enables the calculation of each team's ball acquisition percentage. Optical flow is used to track player movement while compensating for camera motion, ensuring precise player tracking. By applying perspective transformation, the model converts pixel movements into real-world measurements, calculating both speed and distance traveled in meters rather than just pixels.
 
-This project integrates object detection, tracking, and analytics to provide valuable insights into team dynamics and individual player performance. Once trained, the system can recognize and track players, referees, and soccer balls in various video feeds, making it a versatile tool for sports analytics.
+This project integrates object detection, tracking, and advanced analytics to offer valuable insights into team dynamics and individual player performance. Once trained, the system can recognize and track players, referees, and soccer balls in various video feeds, making it a versatile tool for sports analytics.
 
 ## Training Data
 
